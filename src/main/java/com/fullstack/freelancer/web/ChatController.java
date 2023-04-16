@@ -1,13 +1,20 @@
 package com.fullstack.freelancer.web;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fullstack.freelancer.model.dto.AdminDTO;
 import com.fullstack.freelancer.model.dto.ChatMessage;
 import org.springframework.context.event.EventListener;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.annotation.SendToUser;
+import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,55 +32,41 @@ public class ChatController {
     }
 
     @MessageMapping("/chat")
-    public void send(ChatMessage message, @Header("simpSessionId") String sessionId) throws Exception {
-
-//        HERE I READ WHO HAS SENT THE MESSAGE BY SESSIONID , IF IT IS ADMIN I SHOULD FORWARD IT TO CLIENT SESSIONID,
-//        BUT IF ITS CLIENT THEN I SHOULD FORWARD IT TO ADMIN SESSIONID
-//        String sessionId = headerAccessor.getSessionId();
+    public void send(ChatMessage message, @Header("simpSessionId") String sessionId) {
         System.out.println(sessionId);
         String otherUSer = "";
+
         for (String s : clientsSessionList) {
             if(!s.equals(sessionId)) otherUSer = s;
         }
 
-            messagingTemplate.convertAndSend("/queue/messages/"+otherUSer,message);
+//            messagingTemplate.convertAndSend("/queue/messages/"+sessionId,message);
+            messagingTemplate.convertAndSend("/queue/messages/" + sessionId,message);
 
 
     }
 
 
 
+
     @EventListener
-    public void handleSessionConnected(SessionConnectedEvent event) throws JsonProcessingException {
-//                if(adminSessionList.isEmpty()) adminSessionList.add("test");
-        // event = SessionConnectedEvent[GenericMessage [payload=byte[0], headers={simpMessageType=CONNECT_ACK,
-        // simpConnectMessage=GenericMessage [payload=byte[0], headers={simpMessageType=CONNECT, stompCommand=CONNECT,
-        // nativeHeaders={accept-version=[1.1,1.0], heart-beat=[10000,10000]}, simpSessionAttributes={}, simpHeartbeat=[J@7d4dd2f4,
-        // simpSessionId=y0vunx5w}], simpSessionId=y0vunx5w}]]
+    public void handleSessionConnected(SessionSubscribeEvent event) throws InterruptedException {
+                if(adminSessionList.isEmpty()) adminSessionList.add("test");
 
         String sessionId = (String) event.getMessage().getHeaders().get("simpSessionId");
-//
-//        boolean isAdminOnline = !adminSessionList.isEmpty();
-//
-//        System.out.println("Connected " + sessionId);
-//
-//
-//        AdminDTO adminDTO = new AdminDTO(isAdminOnline);
-//
-////        String messageContent = adminDTO.;
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        String messageContent = objectMapper.writeValueAsString(adminDTO);
-//
-//        byte[] payload = messageContent.getBytes();
-//
-//        String destination = "/topic/messages";
-//
-//        SimpMessageHeaderAccessor headerAccessor =  generateNewOne(destination,sessionId);
-//
-//        assert sessionId != null;
-//        messagingTemplate.convertAndSendToUser(sessionId, destination,payload,headerAccessor.getMessageHeaders());
-        System.out.println("CLIENT " + sessionId + " CONNECTED");
+
+        boolean isAdminOnline = !adminSessionList.isEmpty();
+
+
+
+       AdminDTO adminDTO = new AdminDTO(isAdminOnline);
+
+        System.out.println("CLIENT " + sessionId + " CONNECTED1");
         clientsSessionList.add(sessionId);
+
+        messagingTemplate.convertAndSend("/queue/messages/"+sessionId,adminDTO);
+
+
     }
 //    @EventListener
 //    public void handleSessionDisconnect(SessionDisconnectEvent event) {
@@ -83,6 +76,7 @@ public class ChatController {
 //
 //        if (isAdmin) adminSessionList.remove(sessionId);
 //         else clientsSessionList.remove(sessionId);
+//        messagingTemplate.convertAndSend("/queue/messages/" + sessionId ,"ds");
 //    }
 
 }

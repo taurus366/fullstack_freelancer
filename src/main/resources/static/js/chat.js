@@ -8,6 +8,8 @@ function connect() {
     stompClient.connect({}, function (frame) {
            sessionId = stompClient.ws._transport.url.split("/chat/")[1].split("/")[1];
 
+           console.log(frame);
+
         stompClient.subscribe("/queue/messages/" + sessionId, function (message) {
             console.log("---------------------------------------------");
             console.log('Message received: ' + message.body);

@@ -24,17 +24,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
      @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-         config.enableSimpleBroker("/queue","/topic","/messages");
+         config.enableSimpleBroker("/queue","/messages","/test1","/test2");
 
          // Set prefix for endpoints the client will send messages to
          config.setApplicationDestinationPrefixes("/app");
 
-         config.setUserDestinationPrefix("/user");
+//         config.setUserDestinationPrefix("/user");
     }
-
-
-
-//
 
 
 }
