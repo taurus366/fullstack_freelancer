@@ -1,39 +1,18 @@
 
 var stompClient = null;
-// const url = 'http://localhost:8080';
-const url = 'http://77.71.76.17:8080';
+const url = '/chat';
+let sessionId;
 function connect() {
-    var socket = new SockJS(url +'/chat');
+    var socket = new SockJS(url);
     stompClient = Stomp.over(socket);
-
-
     stompClient.connect({}, function (frame) {
+           sessionId = stompClient.ws._transport.url.split("/chat/")[1].split("/")[1];
 
-        // console.log(frame);
-        // console.log(stompClient.ws._transport.url + "--------------------------------------------------");
-        // console.log(stompClient.ws._transport.url.split("/chat/")[1].split("/")[1]);
-        //     let sessionId = stompClient.ws._transport.url.split("/chat/")[1].split("/")[1];
-
-        stompClient.subscribe("1/topic/messages", function (message) {
+        stompClient.subscribe("/queue/messages/" + sessionId, function (message) {
             console.log("---------------------------------------------");
             console.log('Message received: ' + message.body);
             console.log(message.headers);
         });
-
-
-        // stompClient.subscribe(stompClient.ws._transport.url.replace("ws://",""), function (message) {
-        //     console.log("---------------------------------------------");
-        //     console.log('Message received: ' + message.body);
-        //     console.log(message.headers);
-        // });
-        // stompClient._transmit( (f) => {
-        //     console.log(f);
-        // })
-
-        // console.log(window.console.log());
-
-    },function (error) {
-        console.log(t);
     });
 
 }
